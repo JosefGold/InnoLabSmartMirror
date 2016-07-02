@@ -68,6 +68,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DataModel\FaceDetectionResult.cs" />
+    <Compile Include="FaceDetector.cs" />
     <Compile Include="TesterClass.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
