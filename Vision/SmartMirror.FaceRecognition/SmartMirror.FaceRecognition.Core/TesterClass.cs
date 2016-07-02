@@ -60,34 +60,50 @@ namespace SmartMirror.FaceRecognition.Core
 
         }
 
-        private static Image<Bgr, Byte> FindFacesInImageAndMark(Image<Bgr, Byte> myImage)
+        private static Image<Bgr, Byte> FindFacesInImageAndMark(Image<Bgr, Byte> myImage, bool faceFeatures = false)
         {
-            var faces = faceeDetector.FindFacesInImage(myImage, true);
+            var faces = faceeDetector.FindFacesInImage(myImage, faceFeatures);
 
-            foreach (var faceResult in faces)
+            int nFaceCounter = 0;
+            foreach (var faceResult in faces.OrderBy(f => f.Face.X))
             {
                 myImage.Draw(faceResult.Face, new Bgr(Color.BurlyWood), 3); //the detected face(s) is highlighted here using a box that is drawn around it/them
 
-                if (faceResult.Mouth.HasValue)
+                using (var resized = faceResult.FaceImage.Resize(100, 100, Emgu.CV.CvEnum.Inter.Cubic))
                 {
-                    myImage.Draw(faceResult.Mouth.Value, new Bgr(Color.Green), 2);
+                    myImage.ROI = new Rectangle(new Point(100 * nFaceCounter, 0), resized.Size); // a rectangle
+                    resized.CopyTo(myImage);
+                    myImage.ROI = Rectangle.Empty;
                 }
 
-                if (faceResult.RightEye.HasValue)
+                myImage.Draw("Unkown", new Point(100 * nFaceCounter, 110), Emgu.CV.CvEnum.FontFace.HersheyComplex, 0.60, new Bgr(Color.Red));
+
+
+                if (faceFeatures)
                 {
-                    myImage.Draw(faceResult.RightEye.Value, new Bgr(Color.Red), 2);
+                    if (faceResult.Mouth.HasValue)
+                    {
+                        myImage.Draw(faceResult.Mouth.Value, new Bgr(Color.Green), 2);
+                    }
+
+                    if (faceResult.RightEye.HasValue)
+                    {
+                        myImage.Draw(faceResult.RightEye.Value, new Bgr(Color.Red), 2);
+                    }
+
+                    if (faceResult.LeftEye.HasValue)
+                    {
+                        myImage.Draw(faceResult.LeftEye.Value, new Bgr(Color.Green), 2);
+                    }
+
+                    if (faceResult.Nose.HasValue)
+                    {
+                        myImage.Draw(faceResult.Nose.Value, new Bgr(Color.Green), 2);
+                    }
                 }
 
-                if (faceResult.LeftEye.HasValue)
-                {
-                    myImage.Draw(faceResult.LeftEye.Value, new Bgr(Color.Green), 2);
-                }
 
-                if (faceResult.Nose.HasValue)
-                {
-                    myImage.Draw(faceResult.Nose.Value, new Bgr(Color.Green), 2);
-                }
-
+                nFaceCounter++;
             }
 
             return myImage;

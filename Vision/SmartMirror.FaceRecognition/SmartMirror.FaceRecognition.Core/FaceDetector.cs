@@ -34,7 +34,7 @@ namespace SmartMirror.FaceRecognition.Core
             {
                 var faces = _faceClassifier.Value.DetectMultiScale(grayframe, 1.1, 10, Size.Empty, myImage.Size); //the actual face detection happens here
 
-                var detectedFaces = faces.Select(f => new FaceDetectionResult(f)).ToList();
+                var detectedFaces = faces.Select(f => new FaceDetectionResult(f, myImage.Copy(f))).ToList();
 
                 if (detectFacialFeatures)
                 {
