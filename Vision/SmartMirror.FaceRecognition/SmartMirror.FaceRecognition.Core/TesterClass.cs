@@ -18,7 +18,7 @@ namespace SmartMirror.FaceRecognition.Core
         private static Capture _capture;
         private static FaceDetector faceeDetector;
 
-         static TesterClass()
+        static TesterClass()
         {
             faceeDetector = new FaceDetector();
         }
@@ -43,6 +43,49 @@ namespace SmartMirror.FaceRecognition.Core
             using (var frame = _capture.QueryFrame())
             {
                 return FindFacesInImageAndMark(frame);
+            }
+        }
+
+
+        public static Image<Bgr, Byte> TrainSnap(string who)
+        {
+            if (_capture == null)
+            {
+                _capture = new Capture();
+            }
+
+            using (var frame = _capture.QueryFrame())
+            {
+                using (var frameImage = frame.ToImage<Bgr, Byte>())
+                {
+                    return Train(frameImage, who);
+                }
+            }
+        }
+
+
+        private static Dictionary<string, List<Image<Bgr, Byte>>> trainingFaces = new Dictionary<string, List<Image<Bgr, byte>>>();
+
+        public static Image<Bgr, Byte> Train(Image<Bgr, Byte> myImage, string who)
+        {
+            var faces = faceeDetector.FindFacesInImage(myImage);
+
+            if (faces.Any())
+            {
+                var trainFace = faces.First();
+
+                if (!trainingFaces.ContainsKey(who))
+                {
+                    trainingFaces.Add(who, new List<Image<Bgr, byte>>());
+                }
+
+                trainingFaces[who].Add(trainFace.FaceImage);
+
+                return trainFace.FaceImage;
+            }
+            else
+            {
+                return new Image<Bgr, byte>(@"C:\Users\Yossi\Pictures\WebComix\New Thumbs\brevity_thumb.png");
             }
         }
 
@@ -110,7 +153,7 @@ namespace SmartMirror.FaceRecognition.Core
         }
 
 
-     
+
 
     }
 }

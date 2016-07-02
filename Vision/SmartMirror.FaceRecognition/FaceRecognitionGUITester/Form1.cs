@@ -24,12 +24,7 @@ namespace FaceRecognitionGUITester
 
         private void button1_Click(object sender, EventArgs e)
         {
-            DialogResult d = openFileDialog1.ShowDialog();
-
-            if (d == System.Windows.Forms.DialogResult.OK)
-            {
-                pictureBox1.Image = TesterClass.ReadImage(openFileDialog1.FileName);
-            }
+            imgBoxTrain.Image = TesterClass.TrainSnap("Yossi");
         }
 
         private void button2_Click(object sender, EventArgs e)
