@@ -84,8 +84,9 @@ namespace SmartMirror.FaceRecognition.Core
                     {
                         var twoEyes = eyesFilteres.Take(2).OrderBy(e => e.X).ToList();
 
+
                         leftEye = twoEyes[0];
-                        rightEye = twoEyes[1];
+                        rightEye = twoEyes.Count > 1 ? twoEyes[1] : Rectangle.Empty;
 
                         leftEye.Offset(face.X, face.Y);
                         rightEye.Offset(face.X, face.Y);
@@ -99,7 +100,7 @@ namespace SmartMirror.FaceRecognition.Core
                 }
             }
 
-            faceResult.Nose = nose != Rectangle.Empty ? (Rectangle?)nose : null ;
+            faceResult.Nose = nose != Rectangle.Empty ? (Rectangle?)nose : null;
             faceResult.RightEye = rightEye != Rectangle.Empty ? (Rectangle?)rightEye : null;
             faceResult.LeftEye = leftEye != Rectangle.Empty ? (Rectangle?)leftEye : null;
             faceResult.Mouth = mouth != Rectangle.Empty ? (Rectangle?)mouth : null;
