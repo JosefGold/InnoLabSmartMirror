@@ -3,14 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Emgu.CV;
-using Emgu.CV.Structure;
 
 namespace SmartMirror.FaceRecognition.Core.DataModel
 {
-    public class FaceRecognitionRecord
+    public class FaceRecognitionResult
     {
-        public int FaceId { get; set; }
-        public Image<Bgr, Byte> FaceImage { get; set; }
+        public PersonInfo RecognizedPerson { get; set; }
+        public double ConfidenceLevel { get; set; }
+
     }
 }

@@ -32,7 +32,8 @@ namespace SmartMirror.FaceRecognition.Core
             {
                 StateUpdateTime = DateTime.MinValue,
                 FaceLastSeen = DateTime.MinValue,
-                FaceFirstSeen = DateTime.MinValue
+                FaceFirstSeen = DateTime.MinValue,
+                FaceId = Guid.Empty
             };
         }
 
@@ -67,6 +68,7 @@ namespace SmartMirror.FaceRecognition.Core
                 {
                     sceneUpdated = HandleExistingFaceDisappeared(frameTime);
                 }
+                // No new face and no old face... boring..
                 else
                 {
                     sceneUpdated = false;
@@ -79,6 +81,7 @@ namespace SmartMirror.FaceRecognition.Core
                     OnSceneUpdated(new SceneInfo()
                         {
                             PersonOfInterest = _state.FoundFace.Clone(),
+                            PersonId = _state.FaceId,
                             SceneTime = frameTime
                         });
                 }
@@ -97,6 +100,7 @@ namespace SmartMirror.FaceRecognition.Core
 
                 _state.FaceFirstSeen = DateTime.MinValue;
                 _state.FaceLastSeen = DateTime.MinValue;
+                _state.FaceId = Guid.Empty;
 
                 return true;
             }
@@ -114,6 +118,7 @@ namespace SmartMirror.FaceRecognition.Core
                 _state.FoundFace = foundFace;
                 _state.FaceFirstSeen = frameTime;
                 _state.FaceLastSeen = frameTime;
+                _state.FaceId = Guid.NewGuid();
 
                 return true;
             }
@@ -150,6 +155,7 @@ namespace SmartMirror.FaceRecognition.Core
         {
             public DateTime StateUpdateTime { get; set; }
             public FaceDetectionResult FoundFace { get; set; }
+            public Guid FaceId { get; set; }
             public DateTime FaceFirstSeen { get; set; }
             public DateTime FaceLastSeen { get; set; }
         }

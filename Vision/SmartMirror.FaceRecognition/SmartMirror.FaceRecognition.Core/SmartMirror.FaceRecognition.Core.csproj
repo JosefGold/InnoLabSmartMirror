@@ -70,11 +70,14 @@
   <ItemGroup>
     <Compile Include="CameraFeed.cs" />
     <Compile Include="DataModel\FaceDetectionResult.cs" />
-    <Compile Include="DataModel\FaceRecognitionRecord.cs" />
+    <Compile Include="DataModel\FaceRecognitionPersonTrainData.cs" />
+    <Compile Include="DataModel\FaceRecognitionResult.cs" />
+    <Compile Include="DataModel\PersonInfo.cs" />
     <Compile Include="FaceDetectionDiscriminators.cs" />
     <Compile Include="FaceDetector.cs" />
     <Compile Include="FaceRecognizer.cs" />
-    <Compile Include="SceneTracker.cs" />
+    <Compile Include="PersonOfInterestTracker.cs" />
+    <Compile Include="DataModel\SceneInfo.cs" />
     <Compile Include="TesterClass.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

@@ -7,24 +7,33 @@ using Emgu.CV;
 using Emgu.CV.Face;
 using Emgu.CV.Structure;
 using SmartMirror.FaceRecognition.Core.DataModel;
+using System.IO;
+using System.Xml.Serialization;
 
 namespace SmartMirror.FaceRecognition.Core
 {
     //http://stackoverflow.com/questions/9457827/how-to-get-confidence-value-in-face-recognition-using-emgu-cv/9466619#9466619
     public class FaceRecognizer : IDisposable
     {
-        public const double EigenFaceRecognizerThreshold = 10;
+        public const double EigenFaceRecognizerThreshold = 2000;
 
         private object _syncRoot = new object();
         private bool _isTrained = false;
         private FaceDetector _faceDetector;
-        private Emgu.CV.Face.FaceRecognizer _faceRecognizer;
+        private Emgu.CV.Face.FaceRecognizer _eigenFaceRecognizer;
+        private Emgu.CV.Face.FaceRecognizer _fisherFaceRecognizer;
+        private Emgu.CV.Face.FaceRecognizer _lbphFaceRecognizer;
 
+        private Dictionary<int, PersonInfo> _personDB;
+
+        private readonly PersonInfo DEFAULT_UNKOWN = new PersonInfo() { Id = -999, Name = "UNKOWN" };
 
         public FaceRecognizer()
         {
             _faceDetector = new FaceDetector();
-            _faceRecognizer = new EigenFaceRecognizer(80, double.PositiveInfinity);
+            _eigenFaceRecognizer = new EigenFaceRecognizer(80, double.PositiveInfinity);
+            _fisherFaceRecognizer = new FisherFaceRecognizer(0, 3500);//4000
+            _lbphFaceRecognizer = new LBPHFaceRecognizer(1, 8, 8, 8, 100);//50
         }
 
         public FaceRecognizer(string trainedModelFilePath)
@@ -34,37 +43,55 @@ namespace SmartMirror.FaceRecognition.Core
         }
 
 
-        public void Save(string filePath)
+        public void Save(string folderPath)
         {
             lock (_syncRoot)
             {
-                _faceRecognizer.Save(filePath);
+                SavePersonDB(folderPath);
+                _eigenFaceRecognizer.Save(Path.Combine(folderPath, "EigenFaceRecTrainedModel.mdl"));
+                _fisherFaceRecognizer.Save(Path.Combine(folderPath, "FisherFaceRecTrainedModel.mdl"));
+                _lbphFaceRecognizer.Save(Path.Combine(folderPath, "LBPHFaceRecTrainedModel.mdl"));
             }
         }
 
-        public void Load(string trainedModelFilePath)
+        public void Load(string trainedModelsFolderPath)
         {
             lock (_syncRoot)
             {
-                _faceRecognizer.Load(trainedModelFilePath);
+                LoadPersonDB(trainedModelsFolderPath);
+                _eigenFaceRecognizer.Load(Path.Combine(trainedModelsFolderPath, "EigenFaceRecTrainedModel.mdl"));
+                _fisherFaceRecognizer.Load(Path.Combine(trainedModelsFolderPath, "FisherFaceRecTrainedModel.mdl"));
+                _lbphFaceRecognizer.Load(Path.Combine(trainedModelsFolderPath, "LBPHFaceRecTrainedModel.mdl"));
+
                 _isTrained = true;
             }
         }
 
-
-        public void Train(List<FaceRecognitionRecord> trainData)
+        public void Train(List<FaceRecognitionPersonTrainData> trainData)
         {
-            var faceImages = trainData.Select(face => face.FaceImage).ToArray();
-            var faceIdentities = trainData.Select(face => face.FaceId).ToArray();
+            List<int> faceIdentities = new List<int>();
+            List<Image<Bgr, byte>> faceImages = new List<Image<Bgr, byte>>();
+
+            foreach (var personTrain in trainData)
+            {
+                foreach (var personImage in personTrain.FacialImages)
+                {
+                    faceIdentities.Add(personTrain.PersonInfo.Id);
+                    faceImages.Add(personImage);
+                }
+            }
 
             lock (_syncRoot)
             {
-                _faceRecognizer.Train(faceImages, faceIdentities);
+                _personDB = trainData.Select(t => t.PersonInfo).ToDictionary(p => p.Id, p => p);
+                _eigenFaceRecognizer.Train(faceImages.ToArray(), faceIdentities.ToArray());
+                _fisherFaceRecognizer.Train(faceImages.ToArray(), faceIdentities.ToArray());
+                _lbphFaceRecognizer.Train(faceImages.ToArray(), faceIdentities.ToArray());
                 _isTrained = true;
             }
         }
 
-        public int? ResolveMostDistinctFaceInImage(Image<Bgr, Byte> image)
+        public FaceRecognitionResult ResolveMostDistinctFaceInImage(Image<Bgr, Byte> image)
         {
             var foundFace = _faceDetector.FindMostDistinctFaceInImage(image);
 
@@ -79,23 +106,84 @@ namespace SmartMirror.FaceRecognition.Core
 
         }
 
-        public int ResolveFaceImage(Image<Bgr, Byte> faceImage)
+        public FaceRecognitionResult ResolveFaceImage(Image<Bgr, Byte> faceImage)
         {
+            if(!_isTrained)
+            {
+                throw new ApplicationException("Face Recognizer was not trained or loaded");
+            }
 
-            var recognitionResults = _faceRecognizer.Predict(faceImage);
+            FaceRecognitionResult result;
+
+            result = RecognizeWithEigenFace(faceImage);
+
+            return result;
+        }
+
+        private FaceRecognitionResult RecognizeWithEigenFace(Image<Bgr, Byte> faceImage)
+        {
+            FaceRecognitionResult result;
+            var recognitionResults = _eigenFaceRecognizer.Predict(faceImage);
 
             if (recognitionResults.Distance < EigenFaceRecognizerThreshold)
             {
+                result = new FaceRecognitionResult()
+                {
+                    RecognizedPerson = _personDB[recognitionResults.Label],
+                    ConfidenceLevel = ((EigenFaceRecognizerThreshold - recognitionResults.Distance) / EigenFaceRecognizerThreshold) * 100
+                };
             }
-
-            return 0;
+            else
+            {
+                result = new FaceRecognitionResult()
+                {
+                    RecognizedPerson = DEFAULT_UNKOWN,
+                    ConfidenceLevel = 100
+                };
+            }
+            return result;
         }
+
+
+        private void SavePersonDB(string folderPath)
+        {
+            string saveFilePath = Path.Combine(folderPath, "FaceRecPersonDB.xml");
+
+            using (FileStream fs = new FileStream(saveFilePath, FileMode.Create))
+            {
+                XmlSerializer xSer = new XmlSerializer(typeof(Dictionary<int, PersonInfo>));
+
+                xSer.Serialize(fs, _personDB);
+            }
+        }
+
+        private void LoadPersonDB(string trainedModelsFolderPath)
+        {
+            string saveFilePath = Path.Combine(trainedModelsFolderPath, "FaceRecPersonDB.xml");
+
+            using (FileStream fs = new FileStream(saveFilePath, FileMode.Open)) //double check that...
+            {
+                XmlSerializer _xSer = new XmlSerializer(typeof(Dictionary<int, PersonInfo>));
+
+                var loadedDB = _xSer.Deserialize(fs) as Dictionary<int, PersonInfo>;
+
+                if(loadedDB != null)
+                {
+                    _personDB = loadedDB;
+                }
+                else
+                {
+                    throw new ApplicationException("Person DB in train model invalid");
+                }
+            }
+        }
+
 
         public void Dispose()
         {
-            if (_faceRecognizer != null)
+            if (_eigenFaceRecognizer != null)
             {
-                _faceRecognizer.Dispose();
+                _eigenFaceRecognizer.Dispose();
             }
         }
     }

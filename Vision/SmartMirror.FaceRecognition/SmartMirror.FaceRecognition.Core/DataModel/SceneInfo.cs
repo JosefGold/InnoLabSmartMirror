@@ -12,6 +12,8 @@ namespace SmartMirror.FaceRecognition.Core.DataModel
         public Image<Bgr, Byte> SceneFrame { get; set; }
         public DateTime SceneTime { get; set; }
         public FaceDetectionResult PersonOfInterest { get; set; }
+        public Guid PersonId { get; set; }
+
 
         public void Dispose()
         {
