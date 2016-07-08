@@ -10,6 +10,7 @@ using SmartMirror.FaceRecognition.Core.DataModel;
 
 namespace SmartMirror.FaceRecognition.Core
 {
+    //http://stackoverflow.com/questions/9457827/how-to-get-confidence-value-in-face-recognition-using-emgu-cv/9466619#9466619
     public class FaceRecognizer : IDisposable
     {
         public const double EigenFaceRecognizerThreshold = 10;
@@ -55,7 +56,7 @@ namespace SmartMirror.FaceRecognition.Core
         {
             var faceImages = trainData.Select(face => face.FaceImage).ToArray();
             var faceIdentities = trainData.Select(face => face.FaceId).ToArray();
-            
+
             lock (_syncRoot)
             {
                 _faceRecognizer.Train(faceImages, faceIdentities);
@@ -81,12 +82,13 @@ namespace SmartMirror.FaceRecognition.Core
         public int ResolveFaceImage(Image<Bgr, Byte> faceImage)
         {
 
-           var recognitionResults = _faceRecognizer.Predict(faceImage);
+            var recognitionResults = _faceRecognizer.Predict(faceImage);
 
-           if (recognitionResults.Distance < EigenFaceRecognizerThreshold)
+            if (recognitionResults.Distance < EigenFaceRecognizerThreshold)
             {
-                
             }
+
+            return 0;
         }
 
         public void Dispose()

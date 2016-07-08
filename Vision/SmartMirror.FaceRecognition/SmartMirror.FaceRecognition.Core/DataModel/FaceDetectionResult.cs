@@ -11,6 +11,12 @@ namespace SmartMirror.FaceRecognition.Core.DataModel
 {
     public class FaceDetectionResult  : IDisposable
     {
+
+        private FaceDetectionResult() // For clone
+        {
+
+        }
+
         public FaceDetectionResult(Rectangle face, Image<Bgr, Byte> faceImage)
         {
             Face = face;
@@ -24,6 +30,21 @@ namespace SmartMirror.FaceRecognition.Core.DataModel
         public Rectangle? RightEye { get; set; }
         public Rectangle? Nose { get; set; }
         public Rectangle? Mouth { get; set; }
+
+
+        public FaceDetectionResult Clone()
+        {
+            return new FaceDetectionResult()
+            {
+                Face = Face,
+                FaceImage = FaceImage.Clone(),
+                LeftEye = LeftEye,
+                Mouth = Mouth,
+                Nose = Nose,
+                RightEye = RightEye
+            };
+        }
+
 
         public void Dispose()
         {

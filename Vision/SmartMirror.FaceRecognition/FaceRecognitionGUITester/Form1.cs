@@ -29,12 +29,7 @@ namespace FaceRecognitionGUITester
 
         private void button2_Click(object sender, EventArgs e)
         {
-           /* while (true)
-            {*/
-
-                timer1.Start();
-
-           /* }*/
+            timer1.Start();
         }
 
         private void timer1_Tick(object sender, EventArgs e)
