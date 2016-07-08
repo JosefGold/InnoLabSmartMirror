@@ -28,13 +28,24 @@ namespace SmartMirror.FaceRecognition.Core
         }
 
 
+        public FaceDetectionResult FindMostDistinctFaceInImage(Image<Bgr, Byte> myImage, bool detectFacialFeatures = false)
+        {
+            return FindFacesInImage(myImage, FaceDetectionDiscriminators.GetMostDistinctiveFaceInFrame, detectFacialFeatures).FirstOrDefault();
+        }
+
         public List<FaceDetectionResult> FindFacesInImage(Image<Bgr, Byte> myImage, bool detectFacialFeatures = false)
+        {
+            return FindFacesInImage(myImage, (faces, image) => faces, detectFacialFeatures);
+        }
+
+        public List<FaceDetectionResult> FindFacesInImage(Image<Bgr, Byte> myImage, Func<IEnumerable<FaceDetectionResult>, Image<Bgr, Byte>, IEnumerable<FaceDetectionResult>> filter, bool detectFacialFeatures = false)
         {
             using (var grayframe = myImage.Convert<Gray, byte>())
             {
                 var faces = _faceClassifier.Value.DetectMultiScale(grayframe, 1.1, 10, Size.Empty, myImage.Size); //the actual face detection happens here
 
-                var detectedFaces = faces.Select(f => new FaceDetectionResult(f, myImage.Copy(f))).ToList();
+                var detectedFaces = filter(faces.Select(f => new FaceDetectionResult(f, myImage.Copy(f))), myImage)
+                                          .ToList();
 
                 if (detectFacialFeatures)
                 {
@@ -47,7 +58,6 @@ namespace SmartMirror.FaceRecognition.Core
                 return detectedFaces;
             }
         }
-
 
         private void DetectAndAddFacialFeatures(Image<Gray, byte> myImage, FaceDetectionResult faceResult)
         {
