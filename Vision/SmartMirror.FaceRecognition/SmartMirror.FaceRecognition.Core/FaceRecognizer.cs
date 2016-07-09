@@ -45,7 +45,7 @@ namespace SmartMirror.FaceRecognition.Core
 
         public void Save(string folderPath)
         {
-            if(!Directory.Exists(folderPath))
+            if (!Directory.Exists(folderPath))
             {
                 Directory.CreateDirectory(folderPath);
             }
@@ -82,7 +82,7 @@ namespace SmartMirror.FaceRecognition.Core
                 foreach (var personImage in personTrain.FacialImages)
                 {
                     faceIdentities.Add(personTrain.PersonInfo.Id);
-                    faceImages.Add(PreProcessImageForRecognition( personImage));
+                    faceImages.Add(PreProcessImageForRecognition(personImage));
                 }
             }
 
@@ -113,7 +113,7 @@ namespace SmartMirror.FaceRecognition.Core
 
         public FaceRecognitionResult ResolveFaceImage(Image<Bgr, Byte> faceImage)
         {
-            if(!_isTrained)
+            if (!_isTrained)
             {
                 throw new ApplicationException("Face Recognizer was not trained or loaded");
             }
@@ -157,6 +157,28 @@ namespace SmartMirror.FaceRecognition.Core
         private Image<Gray, byte> PreProcessImageForRecognition(Image<Bgr, byte> faceImage)
         {
             // TODO Add resize and histogram fixes
+
+
+            // Trick 1: Crop Face
+            /*                   
+            facesDetected[i].X += (int)(facesDetected[i].Height * 0.15);
+            facesDetected[i].Y += (int)(facesDetected[i].Width * 0.22);
+            facesDetected[i].Height -= (int)(facesDetected[i].Height * 0.3);
+            facesDetected[i].Width -= (int)(facesDetected[i].Width * 0.35);
+            */
+
+            // Trick 2: Resize 100x100
+            /*
+             result = currentFrame.Copy(facesDetected[i]).Convert<Gray, byte>().Resize(100, 100, Emgu.CV.CvEnum.INTER.CV_INTER_CUBIC);
+            */
+
+            // Trick 2: Equalize Histogram 100x100
+            /*
+                result._EqualizeHist();
+            */
+
+
+
             return faceImage.Convert<Gray, byte>();
         }
 
@@ -182,7 +204,7 @@ namespace SmartMirror.FaceRecognition.Core
 
                 var loadedDB = _xSer.Deserialize(fs) as Dictionary<int, PersonInfo>;
 
-                if(loadedDB != null)
+                if (loadedDB != null)
                 {
                     _personDB = loadedDB;
                 }

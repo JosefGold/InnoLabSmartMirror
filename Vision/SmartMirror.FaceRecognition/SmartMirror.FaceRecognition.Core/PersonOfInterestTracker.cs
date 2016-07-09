@@ -144,6 +144,23 @@ namespace SmartMirror.FaceRecognition.Core
 
         private bool EstimateSameFaceAsState(FaceDetectionResult foundFace, DateTime frameTime)
         {
+            // TODO Another approach to guesstimate
+            // http://synaptitude.me/blog/smooth-face-tracking-using-opencv/
+            /*
+
+              if(abs(center.x - priorCenter.x) < frame.size().width / 6 &&
+                  abs(center.y - priorCenter.y) < frame.size().height / 6) {
+
+                    // Check to see if the user moved enough to update position                           
+                    if(abs(center.x - priorCenter.x) < 7 &&
+                       abs(center.y - priorCenter.y) < 7){
+                        center = priorCenter;
+                    }
+                }
+             
+             * */
+
+
             var newFace = foundFace.Face;
             var oldFace = _state.FoundFace.Face;
 
