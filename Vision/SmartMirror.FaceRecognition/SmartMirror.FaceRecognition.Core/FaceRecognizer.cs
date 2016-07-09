@@ -45,6 +45,11 @@ namespace SmartMirror.FaceRecognition.Core
 
         public void Save(string folderPath)
         {
+            if(!Directory.Exists(folderPath))
+            {
+                Directory.CreateDirectory(folderPath);
+            }
+
             lock (_syncRoot)
             {
                 SavePersonDB(folderPath);
@@ -70,14 +75,14 @@ namespace SmartMirror.FaceRecognition.Core
         public void Train(List<FaceRecognitionPersonTrainData> trainData)
         {
             List<int> faceIdentities = new List<int>();
-            List<Image<Bgr, byte>> faceImages = new List<Image<Bgr, byte>>();
+            List<Image<Gray, byte>> faceImages = new List<Image<Gray, byte>>();
 
             foreach (var personTrain in trainData)
             {
                 foreach (var personImage in personTrain.FacialImages)
                 {
                     faceIdentities.Add(personTrain.PersonInfo.Id);
-                    faceImages.Add(personImage);
+                    faceImages.Add(PreProcessImageForRecognition( personImage));
                 }
             }
 
@@ -113,14 +118,18 @@ namespace SmartMirror.FaceRecognition.Core
                 throw new ApplicationException("Face Recognizer was not trained or loaded");
             }
 
+
+            Image<Gray, Byte> proccessedFaceImage = PreProcessImageForRecognition(faceImage);
+
+
             FaceRecognitionResult result;
 
-            result = RecognizeWithEigenFace(faceImage);
+            result = RecognizeWithEigenFace(proccessedFaceImage);
 
             return result;
         }
 
-        private FaceRecognitionResult RecognizeWithEigenFace(Image<Bgr, Byte> faceImage)
+        private FaceRecognitionResult RecognizeWithEigenFace(Image<Gray, Byte> faceImage)
         {
             FaceRecognitionResult result;
             var recognitionResults = _eigenFaceRecognizer.Predict(faceImage);
@@ -144,6 +153,12 @@ namespace SmartMirror.FaceRecognition.Core
             return result;
         }
 
+
+        private Image<Gray, byte> PreProcessImageForRecognition(Image<Bgr, byte> faceImage)
+        {
+            // TODO Add resize and histogram fixes
+            return faceImage.Convert<Gray, byte>();
+        }
 
         private void SavePersonDB(string folderPath)
         {

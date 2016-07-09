@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SmartMirror.FaceRecognition
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FaceRecognitionGUITester", "FaceRecognitionGUITester\FaceRecognitionGUITester.csproj", "{26DB7DC0-1DA2-4F94-9B21-CC3C9FE60C29}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FaceRecognitionModelTrainer", "FaceRecognitionModelTrainer\FaceRecognitionModelTrainer.csproj", "{22740AF4-5C17-444C-8D1D-F54E6EE58C34}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{26DB7DC0-1DA2-4F94-9B21-CC3C9FE60C29}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{26DB7DC0-1DA2-4F94-9B21-CC3C9FE60C29}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{26DB7DC0-1DA2-4F94-9B21-CC3C9FE60C29}.Release|Any CPU.Build.0 = Release|Any CPU
+		{22740AF4-5C17-444C-8D1D-F54E6EE58C34}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{22740AF4-5C17-444C-8D1D-F54E6EE58C34}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{22740AF4-5C17-444C-8D1D-F54E6EE58C34}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{22740AF4-5C17-444C-8D1D-F54E6EE58C34}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

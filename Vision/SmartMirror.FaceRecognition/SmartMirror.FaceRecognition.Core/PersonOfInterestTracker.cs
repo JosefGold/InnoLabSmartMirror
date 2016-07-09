@@ -17,7 +17,7 @@ namespace SmartMirror.FaceRecognition.Core
         CameraFeed _camFeed;
         FaceDetector _faceDetector;
 
-        Object _stateSyncObj = new object(); // This should be neccesery, but just in case 
+        Object _stateSyncObj = new object(); // This shouldn't be neccesery, but just in case 
         SceneTrackingState _state;
 
         public event SceneUpdated OnSceneUpdated;
