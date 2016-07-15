@@ -214,7 +214,7 @@ namespace FaceRecognitionModelTrainer
                 _faceRecognizer.Train(collectedTrainData);
                 _faceRecognizer.Save(txtModelSaveFolder.Text);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 MessageBox.Show("Failed to train and save model: " + ex.ToString());
             }
@@ -267,11 +267,22 @@ namespace FaceRecognitionModelTrainer
 
             for (int i = 0; i < trainData.FacialImages.Count; i++)
             {
-
-                node.Nodes.Add("Image " + (i+1) + " [" + trainData.FacialImages[i].GetHashCode() + "]");
+                var subNode = node.Nodes.Add("Image " + (i + 1) + " [" + trainData.FacialImages[i].GetHashCode() + "]");
+                subNode.Tag = trainData.FacialImages[i];
             }
 
             treeViewTrainData.Nodes.Add(node);
+        }
+
+        private void treeViewTrainData_DoubleClick(object sender, EventArgs e)
+        {
+
+         Image<Bgr, byte> image =   treeViewTrainData.SelectedNode.Tag as Image<Bgr, byte>;
+           using(ShowImage showimage= new ShowImage(image))
+           {
+              showimage.ShowDialog();
+           }
+            
         }
 
 

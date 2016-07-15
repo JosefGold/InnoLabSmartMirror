@@ -1,6 +1,6 @@
 ﻿namespace FaceRecognitionModelTrainer
 {
-    partial class TrainCapture
+    partial class ShowImage
     {
         /// <summary>
         /// Required designer variable.
@@ -30,8 +30,6 @@
         {
             this.components = new System.ComponentModel.Container();
             this.imageBox1 = new Emgu.CV.UI.ImageBox();
-            this.label1 = new System.Windows.Forms.Label();
-            this.lblCount = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.imageBox1)).BeginInit();
             this.SuspendLayout();
             // 
@@ -39,48 +37,25 @@
             // 
             this.imageBox1.Location = new System.Drawing.Point(12, 12);
             this.imageBox1.Name = "imageBox1";
-            this.imageBox1.Size = new System.Drawing.Size(564, 388);
+            this.imageBox1.Size = new System.Drawing.Size(268, 254);
             this.imageBox1.TabIndex = 2;
             this.imageBox1.TabStop = false;
             // 
-            // label1
-            // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(250, 427);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(64, 13);
-            this.label1.TabIndex = 3;
-            this.label1.Text = "Capturing....";
-            // 
-            // lblCount
-            // 
-            this.lblCount.AutoSize = true;
-            this.lblCount.Font = new System.Drawing.Font("Microsoft Sans Serif", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(177)));
-            this.lblCount.Location = new System.Drawing.Point(462, 427);
-            this.lblCount.Name = "lblCount";
-            this.lblCount.Size = new System.Drawing.Size(0, 24);
-            this.lblCount.TabIndex = 4;
-            // 
-            // TrainCapture
+            // ShowImage
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(588, 462);
-            this.Controls.Add(this.lblCount);
-            this.Controls.Add(this.label1);
+            this.ClientSize = new System.Drawing.Size(292, 284);
             this.Controls.Add(this.imageBox1);
-            this.Name = "TrainCapture";
-            this.Text = "TrainCapture";
+            this.Name = "ShowImage";
+            this.Text = "ShowImage";
             ((System.ComponentModel.ISupportInitialize)(this.imageBox1)).EndInit();
             this.ResumeLayout(false);
-            this.PerformLayout();
 
         }
 
         #endregion
 
         private Emgu.CV.UI.ImageBox imageBox1;
-        private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.Label lblCount;
     }
 }

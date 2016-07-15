@@ -151,6 +151,7 @@ namespace SmartMirror.FaceRecognition.Core
 
         private bool EstimateSameFaceAsState(FaceDetectionResult foundFace, DateTime frameTime)
         {
+
             // TODO Another approach to guesstimate
             // http://synaptitude.me/blog/smooth-face-tracking-using-opencv/
             /*
@@ -166,6 +167,7 @@ namespace SmartMirror.FaceRecognition.Core
                 }
              
              * */
+            // Add face recognition here
 
 
             var newFace = foundFace.Face;

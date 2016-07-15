@@ -159,6 +159,7 @@
             this.treeViewTrainData.Name = "treeViewTrainData";
             this.treeViewTrainData.Size = new System.Drawing.Size(265, 313);
             this.treeViewTrainData.TabIndex = 2;
+            this.treeViewTrainData.DoubleClick += new System.EventHandler(this.treeViewTrainData_DoubleClick);
             // 
             // groupBox2
             // 
@@ -227,7 +228,6 @@
             // 
             // btnCaptureFromCam
             // 
-            this.btnCaptureFromCam.Enabled = false;
             this.btnCaptureFromCam.Font = new System.Drawing.Font("Microsoft Sans Serif", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(177)));
             this.btnCaptureFromCam.Location = new System.Drawing.Point(77, 308);
             this.btnCaptureFromCam.Name = "btnCaptureFromCam";
