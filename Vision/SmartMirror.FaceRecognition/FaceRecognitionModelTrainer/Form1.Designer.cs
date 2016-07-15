@@ -48,6 +48,7 @@
             this.folderBrowserDialog1 = new System.Windows.Forms.FolderBrowserDialog();
             this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.btnCaptureFromCam = new System.Windows.Forms.Button();
+            this.btnAddUnkowns = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -157,12 +158,13 @@
             // 
             this.treeViewTrainData.Location = new System.Drawing.Point(19, 39);
             this.treeViewTrainData.Name = "treeViewTrainData";
-            this.treeViewTrainData.Size = new System.Drawing.Size(265, 313);
+            this.treeViewTrainData.Size = new System.Drawing.Size(265, 254);
             this.treeViewTrainData.TabIndex = 2;
             this.treeViewTrainData.DoubleClick += new System.EventHandler(this.treeViewTrainData_DoubleClick);
             // 
             // groupBox2
             // 
+            this.groupBox2.Controls.Add(this.btnAddUnkowns);
             this.groupBox2.Controls.Add(this.treeViewTrainData);
             this.groupBox2.Font = new System.Drawing.Font("Microsoft Sans Serif", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(177)));
             this.groupBox2.Location = new System.Drawing.Point(428, 12);
@@ -237,6 +239,17 @@
             this.btnCaptureFromCam.UseVisualStyleBackColor = true;
             this.btnCaptureFromCam.Click += new System.EventHandler(this.btnCaptureFromCam_Click);
             // 
+            // btnAddUnkowns
+            // 
+            this.btnAddUnkowns.Font = new System.Drawing.Font("Microsoft Sans Serif", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(177)));
+            this.btnAddUnkowns.Location = new System.Drawing.Point(29, 308);
+            this.btnAddUnkowns.Name = "btnAddUnkowns";
+            this.btnAddUnkowns.Size = new System.Drawing.Size(137, 29);
+            this.btnAddUnkowns.TabIndex = 9;
+            this.btnAddUnkowns.Text = "Add Unkowns";
+            this.btnAddUnkowns.UseVisualStyleBackColor = true;
+            this.btnAddUnkowns.Click += new System.EventHandler(this.btnAddUnkowns_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -277,6 +290,7 @@
         private System.Windows.Forms.FolderBrowserDialog folderBrowserDialog1;
         private System.Windows.Forms.Button btnCaptureFromCam;
         private System.Windows.Forms.Timer timer1;
+        private System.Windows.Forms.Button btnAddUnkowns;
     }
 }
 

@@ -1,4 +1,5 @@
 ﻿using Emgu.CV;
+using Emgu.CV.Structure;
 using SmartMirror.FaceRecognition.Core;
 using SmartMirror.FaceRecognition.Core.Visualization;
 using System;
@@ -17,10 +18,13 @@ namespace FaceRecognitionGUITester
     public partial class Form1 : Form
     {
         IFeedVisualizer _visualizer;
+        Capture _cap;
+        FaceRecognizer _recognizer;
 
         public Form1()
         {
             InitializeComponent();
+            _cap = new Capture();
         }
 
 
@@ -50,11 +54,60 @@ namespace FaceRecognitionGUITester
 
         private void ResetVisualizer()
         {
-            if(_visualizer != null)
+            if (_visualizer != null)
             {
                 _visualizer.FrameCaptured -= _visualizer_FrameCaptured;
                 _visualizer.Dispose();
                 _visualizer = null;
+            }
+        }
+
+        private void btnRecognize_Click(object sender, EventArgs e)
+        {
+            openFileDialog1.ShowDialog();
+
+            string file = openFileDialog1.FileName;
+
+            var image = new Image<Bgr, byte>(file);
+            imgRec.Image = image;
+
+            var result = _recognizer.ResolveMostDistinctFaceInImage(image);
+            if (result != null)
+            {
+                MessageBox.Show(result.RecognizedPerson.Name);
+            }
+            else
+            {
+                MessageBox.Show("No Face");
+            }
+        }
+
+        private void btnLoadRecognizer_Click(object sender, EventArgs e)
+        {
+            folderBrowserDialog1.ShowDialog();
+
+            string dir = folderBrowserDialog1.SelectedPath;
+
+            _recognizer = new FaceRecognizer(dir);
+
+            btnRecognize.Enabled = true;
+            btnRCCamera.Enabled = true;
+        }
+
+        private void btnRCCamera_Click(object sender, EventArgs e)
+        {
+            using (var frame = _cap.QueryFrame())
+            {
+
+                var result = _recognizer.ResolveMostDistinctFaceInImage(frame.ToImage<Bgr, byte>());
+                if (result != null)
+                {
+                    MessageBox.Show(result.RecognizedPerson.Name);
+                }
+                else
+                {
+                    MessageBox.Show("No Face");
+                }
             }
         }
 

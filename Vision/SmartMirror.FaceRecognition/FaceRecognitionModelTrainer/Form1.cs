@@ -224,7 +224,7 @@ namespace FaceRecognitionModelTrainer
 
 
 
-        private List<Image<Bgr, byte>> GetFaceImagesFromFolderPicture(string imagesPath, bool cropFaces)
+        private List<Image<Bgr, byte>> GetFaceImagesFromFolderPicture(string imagesPath, bool cropFaces, string extentionFilter = "*.jpg")
         {
             List<Image<Bgr, byte>> faceImages = new List<Image<Bgr, byte>>();
 
@@ -232,7 +232,7 @@ namespace FaceRecognitionModelTrainer
             {
                 if (Directory.Exists(imagesPath))
                 {
-                    string[] pictureFiles = Directory.GetFiles(imagesPath, "*.jpg", SearchOption.TopDirectoryOnly);
+                    string[] pictureFiles = Directory.GetFiles(imagesPath, extentionFilter, SearchOption.TopDirectoryOnly);
 
                     if (pictureFiles.Length > 0)
                     {
@@ -277,12 +277,50 @@ namespace FaceRecognitionModelTrainer
         private void treeViewTrainData_DoubleClick(object sender, EventArgs e)
         {
 
-         Image<Bgr, byte> image =   treeViewTrainData.SelectedNode.Tag as Image<Bgr, byte>;
-           using(ShowImage showimage= new ShowImage(image))
-           {
-              showimage.ShowDialog();
-           }
-            
+            Image<Bgr, byte> image = treeViewTrainData.SelectedNode.Tag as Image<Bgr, byte>;
+            using (ShowImage showimage = new ShowImage(image))
+            {
+                showimage.ShowDialog();
+            }
+
+        }
+
+        private void btnAddUnkowns_Click(object sender, EventArgs e)
+        {
+            List<FaceRecognitionPersonTrainData> unkownFaces = LoadUnkownFacesDB("..\\..\\..\\FaceDB");
+
+            foreach (var trainData in unkownFaces.Where(u => u.FacialImages.Count > 8))
+            {
+                AddNewPersonTrainData(trainData);
+            }
+
+        }
+
+        private List<FaceRecognitionPersonTrainData> LoadUnkownFacesDB(string faceDBFolder)
+        {
+            List<FaceRecognitionPersonTrainData> results = new List<FaceRecognitionPersonTrainData>();
+
+            string[] subDirectories = Directory.GetDirectories(faceDBFolder);
+
+            foreach (var personDir in subDirectories)
+            {
+                var personImages = GetFaceImagesFromFolderPicture(personDir, true, "*.pgm");
+
+                results.Add(new FaceRecognitionPersonTrainData()
+                    {
+                        FacialImages = personImages,
+                        PersonInfo = new PersonInfo()
+                        {
+                            Id = nClassCounter,
+                            Name = Path.GetFileName(personDir)
+                        }
+
+                    });
+
+                nClassCounter++;
+            }
+
+            return results;
         }
 
 

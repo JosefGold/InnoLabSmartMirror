@@ -10,6 +10,7 @@ using SmartMirror.FaceRecognition.Core.DataModel;
 using System.IO;
 using System.Xml.Serialization;
 using System.Drawing;
+using System.Runtime.Serialization;
 
 namespace SmartMirror.FaceRecognition.Core
 {
@@ -17,6 +18,8 @@ namespace SmartMirror.FaceRecognition.Core
     public class FaceRecognizer : IDisposable
     {
         public const double EigenFaceRecognizerThreshold = 2000;
+        public const double FisherFaceRecognizerThreshold = 3500; //4000
+        public const double LBPHFaceRecognizerThreshold = 100; //50
 
         private object _syncRoot = new object();
         private bool _isTrained = false;
@@ -33,8 +36,8 @@ namespace SmartMirror.FaceRecognition.Core
         {
             _faceDetector = new FaceDetector();
             _eigenFaceRecognizer = new EigenFaceRecognizer(80, double.PositiveInfinity);
-            _fisherFaceRecognizer = new FisherFaceRecognizer(0, 3500);//4000
-            _lbphFaceRecognizer = new LBPHFaceRecognizer(1, 8, 8, 8, 100);//50
+            _fisherFaceRecognizer = new FisherFaceRecognizer(10, FisherFaceRecognizerThreshold);
+            _lbphFaceRecognizer = new LBPHFaceRecognizer(1, 8, 8, 8, LBPHFaceRecognizerThreshold);
         }
 
         public FaceRecognizer(string trainedModelFilePath)
@@ -54,9 +57,9 @@ namespace SmartMirror.FaceRecognition.Core
             lock (_syncRoot)
             {
                 SavePersonDB(folderPath);
-                _eigenFaceRecognizer.Save(Path.Combine(folderPath, "EigenFaceRecTrainedModel.mdl"));
-                _fisherFaceRecognizer.Save(Path.Combine(folderPath, "FisherFaceRecTrainedModel.mdl"));
-                _lbphFaceRecognizer.Save(Path.Combine(folderPath, "LBPHFaceRecTrainedModel.mdl"));
+                _eigenFaceRecognizer.Save(Path.Combine(folderPath, "EigenFaceRecTrainedModel.yaml"));
+                _fisherFaceRecognizer.Save(Path.Combine(folderPath, "FisherFaceRecTrainedModel.yaml"));
+                _lbphFaceRecognizer.Save(Path.Combine(folderPath, "LBPHFaceRecTrainedModel.yaml"));
             }
         }
 
@@ -65,9 +68,9 @@ namespace SmartMirror.FaceRecognition.Core
             lock (_syncRoot)
             {
                 LoadPersonDB(trainedModelsFolderPath);
-                _eigenFaceRecognizer.Load(Path.Combine(trainedModelsFolderPath, "EigenFaceRecTrainedModel.mdl"));
-                _fisherFaceRecognizer.Load(Path.Combine(trainedModelsFolderPath, "FisherFaceRecTrainedModel.mdl"));
-                _lbphFaceRecognizer.Load(Path.Combine(trainedModelsFolderPath, "LBPHFaceRecTrainedModel.mdl"));
+                _eigenFaceRecognizer.Load(Path.Combine(trainedModelsFolderPath, "EigenFaceRecTrainedModel.yaml"));
+                _fisherFaceRecognizer.Load(Path.Combine(trainedModelsFolderPath, "FisherFaceRecTrainedModel.yaml"));
+                _lbphFaceRecognizer.Load(Path.Combine(trainedModelsFolderPath, "LBPHFaceRecTrainedModel.yaml"));
 
                 _isTrained = true;
             }
@@ -126,6 +129,8 @@ namespace SmartMirror.FaceRecognition.Core
             FaceRecognitionResult result;
 
             result = RecognizeWithEigenFace(proccessedFaceImage);
+            result = RecognizeWithFisherFace(proccessedFaceImage);
+            result = RecognizeWithLBPH(proccessedFaceImage);
 
             return result;
         }
@@ -155,13 +160,63 @@ namespace SmartMirror.FaceRecognition.Core
         }
 
 
+        private FaceRecognitionResult RecognizeWithFisherFace(Image<Gray, Byte> faceImage)
+        {
+            FaceRecognitionResult result;
+            var recognitionResults = _fisherFaceRecognizer.Predict(faceImage);
+
+            if (recognitionResults.Distance < FisherFaceRecognizerThreshold)
+            {
+                result = new FaceRecognitionResult()
+                {
+                    RecognizedPerson = _personDB[recognitionResults.Label],
+                    ConfidenceLevel = ((FisherFaceRecognizerThreshold - recognitionResults.Distance) / FisherFaceRecognizerThreshold) * 100
+                };
+            }
+            else
+            {
+                result = new FaceRecognitionResult()
+                {
+                    RecognizedPerson = DEFAULT_UNKOWN,
+                    ConfidenceLevel = 100
+                };
+            }
+            return result;
+        }
+
+
+        private FaceRecognitionResult RecognizeWithLBPH(Image<Gray, Byte> faceImage)
+        {
+            FaceRecognitionResult result;
+            var recognitionResults = _lbphFaceRecognizer.Predict(faceImage);
+
+            if (recognitionResults.Distance < LBPHFaceRecognizerThreshold)
+            {
+                result = new FaceRecognitionResult()
+                {
+                    RecognizedPerson = _personDB[recognitionResults.Label],
+                    ConfidenceLevel = ((LBPHFaceRecognizerThreshold - recognitionResults.Distance) / LBPHFaceRecognizerThreshold) * 100
+                };
+            }
+            else
+            {
+                result = new FaceRecognitionResult()
+                {
+                    RecognizedPerson = DEFAULT_UNKOWN,
+                    ConfidenceLevel = 100
+                };
+            }
+            return result;
+        }
+
+
         private Image<Gray, byte> PreProcessImageForRecognition(Image<Bgr, byte> faceImage, bool withCrop = false)
         {
             Image<Gray, byte> proccessedImage;
 
             Rectangle roi = new Rectangle(new Point(0, 0), faceImage.Size);
 
-            if(withCrop)
+            if (withCrop)
             {
                 roi.X += (int)(roi.Height * 0.15);
                 roi.Y += (int)(roi.Width * 0.22);
@@ -187,9 +242,9 @@ namespace SmartMirror.FaceRecognition.Core
 
             using (FileStream fs = new FileStream(saveFilePath, FileMode.Create))
             {
-                XmlSerializer xSer = new XmlSerializer(typeof(Dictionary<int, PersonInfo>));
+                DataContractSerializer serializer = new DataContractSerializer(typeof(Dictionary<int, PersonInfo>));
 
-                xSer.Serialize(fs, _personDB);
+                serializer.WriteObject(fs, _personDB);
             }
         }
 
@@ -199,9 +254,9 @@ namespace SmartMirror.FaceRecognition.Core
 
             using (FileStream fs = new FileStream(saveFilePath, FileMode.Open)) //double check that...
             {
-                XmlSerializer _xSer = new XmlSerializer(typeof(Dictionary<int, PersonInfo>));
+                DataContractSerializer serializer = new DataContractSerializer(typeof(Dictionary<int, PersonInfo>));
 
-                var loadedDB = _xSer.Deserialize(fs) as Dictionary<int, PersonInfo>;
+                var loadedDB = serializer.ReadObject(fs) as Dictionary<int, PersonInfo>;
 
                 if (loadedDB != null)
                 {
