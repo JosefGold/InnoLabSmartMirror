@@ -128,11 +128,11 @@ namespace SmartMirror.FaceRecognition.Core
 
             FaceRecognitionResult result;
 
-            result = RecognizeWithEigenFace(proccessedFaceImage);
-            result = RecognizeWithFisherFace(proccessedFaceImage);
-            result = RecognizeWithLBPH(proccessedFaceImage);
+            var eigenResult = RecognizeWithEigenFace(proccessedFaceImage);
+            var fisherResult = RecognizeWithFisherFace(proccessedFaceImage);
+            var lbphResult = RecognizeWithLBPH(proccessedFaceImage);
 
-            return result;
+            return lbphResult;
         }
 
         private FaceRecognitionResult RecognizeWithEigenFace(Image<Gray, Byte> faceImage)
@@ -140,12 +140,12 @@ namespace SmartMirror.FaceRecognition.Core
             FaceRecognitionResult result;
             var recognitionResults = _eigenFaceRecognizer.Predict(faceImage);
 
-            if (recognitionResults.Distance < EigenFaceRecognizerThreshold)
+            if (recognitionResults.Distance > EigenFaceRecognizerThreshold)
             {
                 result = new FaceRecognitionResult()
                 {
                     RecognizedPerson = _personDB[recognitionResults.Label],
-                    ConfidenceLevel = ((EigenFaceRecognizerThreshold - recognitionResults.Distance) / EigenFaceRecognizerThreshold) * 100
+                    ConfidenceLevel = ((recognitionResults.Distance - EigenFaceRecognizerThreshold) / (EigenFaceRecognizerThreshold * 3)) * 100
                 };
             }
             else
