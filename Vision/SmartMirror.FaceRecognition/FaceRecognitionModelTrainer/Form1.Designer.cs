@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.btnAddPerson = new System.Windows.Forms.Button();
             this.chkCropFaces = new System.Windows.Forms.CheckBox();
@@ -45,6 +46,8 @@
             this.label3 = new System.Windows.Forms.Label();
             this.btnTrainAndSave = new System.Windows.Forms.Button();
             this.folderBrowserDialog1 = new System.Windows.Forms.FolderBrowserDialog();
+            this.timer1 = new System.Windows.Forms.Timer(this.components);
+            this.btnCaptureFromCam = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -52,6 +55,7 @@
             // 
             // groupBox1
             // 
+            this.groupBox1.Controls.Add(this.btnCaptureFromCam);
             this.groupBox1.Controls.Add(this.btnAddPerson);
             this.groupBox1.Controls.Add(this.chkCropFaces);
             this.groupBox1.Controls.Add(this.btnSelectTrainPicsFolder);
@@ -72,7 +76,7 @@
             // 
             this.btnAddPerson.Enabled = false;
             this.btnAddPerson.Font = new System.Drawing.Font("Microsoft Sans Serif", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(177)));
-            this.btnAddPerson.Location = new System.Drawing.Point(102, 288);
+            this.btnAddPerson.Location = new System.Drawing.Point(102, 246);
             this.btnAddPerson.Name = "btnAddPerson";
             this.btnAddPerson.Size = new System.Drawing.Size(138, 29);
             this.btnAddPerson.TabIndex = 7;
@@ -221,6 +225,18 @@
             this.btnTrainAndSave.UseVisualStyleBackColor = true;
             this.btnTrainAndSave.Click += new System.EventHandler(this.btnTrainAndSave_Click);
             // 
+            // btnCaptureFromCam
+            // 
+            this.btnCaptureFromCam.Enabled = false;
+            this.btnCaptureFromCam.Font = new System.Drawing.Font("Microsoft Sans Serif", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(177)));
+            this.btnCaptureFromCam.Location = new System.Drawing.Point(77, 308);
+            this.btnCaptureFromCam.Name = "btnCaptureFromCam";
+            this.btnCaptureFromCam.Size = new System.Drawing.Size(208, 29);
+            this.btnCaptureFromCam.TabIndex = 8;
+            this.btnCaptureFromCam.Text = "Capture from Camera";
+            this.btnCaptureFromCam.UseVisualStyleBackColor = true;
+            this.btnCaptureFromCam.Click += new System.EventHandler(this.btnCaptureFromCam_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -259,6 +275,8 @@
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Button btnTrainAndSave;
         private System.Windows.Forms.FolderBrowserDialog folderBrowserDialog1;
+        private System.Windows.Forms.Button btnCaptureFromCam;
+        private System.Windows.Forms.Timer timer1;
     }
 }
 

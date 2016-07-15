@@ -18,7 +18,7 @@ namespace SmartMirror.FaceRecognition.Core
         private Timer _frameCaptureTimer; // this is a "forms" timer on purpous, in case processing on event in slower than framerate 
         private Capture _capture;
 
-        public CameraFeed(int requestedFramesPerSecond)
+        public CameraFeed(int requestedFramesPerSecond = 10)
         {
             if (requestedFramesPerSecond > 24 || requestedFramesPerSecond <= 0)
             {

@@ -12,8 +12,10 @@ namespace SmartMirror.FaceRecognition.Core
     public delegate void SceneUpdated(SceneInfo sceneInfo);
 
 
-    public class PersonOfInterestTracker
+    public class PersonOfInterestTracker : IDisposable
     {
+        bool _updateOnDetectionOnly;
+
         CameraFeed _camFeed;
         FaceDetector _faceDetector;
 
@@ -22,11 +24,12 @@ namespace SmartMirror.FaceRecognition.Core
 
         public event SceneUpdated OnSceneUpdated;
 
-        public PersonOfInterestTracker(bool detectFaceFeatures = false, bool doFecialRecognition = false, int fps = 10)
+        public PersonOfInterestTracker(bool detectFaceFeatures = false, bool doFecialRecognition = false, int fps = 10, bool updateOnDetectionOnly = true)
         {
             _camFeed = new CameraFeed(fps);
             _camFeed.FrameCaptured += _camFeed_FrameCaptured;
             _faceDetector = new FaceDetector();
+            _updateOnDetectionOnly = updateOnDetectionOnly;
 
             _state = new SceneTrackingState()
             {
@@ -76,12 +79,16 @@ namespace SmartMirror.FaceRecognition.Core
 
                 _state.StateUpdateTime = frameTime;
 
-                if (sceneUpdated && OnSceneUpdated != null)
+                if (OnSceneUpdated != null && (sceneUpdated || !_updateOnDetectionOnly))
                 {
+                    bool faceFound = _state.FoundFace != null;
+
                     OnSceneUpdated(new SceneInfo()
                         {
-                            PersonOfInterest = _state.FoundFace.Clone(),
-                            PersonId = _state.FaceId,
+                            SceneFrame = frameImage,
+                            HasFace = faceFound,
+                            PersonOfInterest = faceFound ? _state.FoundFace.Clone() : null,
+                            PersonId = faceFound ? _state.FaceId : Guid.Empty,
                             SceneTime = frameTime
                         });
                 }
@@ -178,5 +185,19 @@ namespace SmartMirror.FaceRecognition.Core
         }
 
 
+
+        public void Dispose()
+        {
+            if (_camFeed != null)
+            {
+                _camFeed.Dispose();
+            }
+
+
+            if (_faceDetector != null)
+            {
+                _faceDetector.Dispose();
+            }
+        }
     }
 }

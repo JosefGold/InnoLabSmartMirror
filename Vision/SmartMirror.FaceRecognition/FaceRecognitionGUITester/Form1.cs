@@ -1,5 +1,6 @@
 ﻿using Emgu.CV;
 using SmartMirror.FaceRecognition.Core;
+using SmartMirror.FaceRecognition.Core.Visualization;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -15,27 +16,49 @@ namespace FaceRecognitionGUITester
 {
     public partial class Form1 : Form
     {
-
+        IFeedVisualizer _visualizer;
 
         public Form1()
         {
             InitializeComponent();
         }
 
-        private void button1_Click(object sender, EventArgs e)
+
+
+        private void btnFreeDetect_Click(object sender, EventArgs e)
         {
-            imgBoxTrain.Image = TesterClass.TrainSnap("Yossi");
+            ResetVisualizer();
+
+            _visualizer = new MultipleFacesDetectionVisualizer(true);
+            _visualizer.FrameCaptured += _visualizer_FrameCaptured;
+            _visualizer.Start();
         }
 
         private void button2_Click(object sender, EventArgs e)
         {
-            timer1.Start();
+            ResetVisualizer();
+
+            _visualizer = new POITrackerVisualizer();
+            _visualizer.FrameCaptured += _visualizer_FrameCaptured;
+            _visualizer.Start();
         }
 
-        private void timer1_Tick(object sender, EventArgs e)
+        void _visualizer_FrameCaptured(Image<Emgu.CV.Structure.Bgr, byte> frameImage)
         {
-
-            imageBox1.Image = TesterClass.Snap();
+            imageBox1.Image = frameImage;
         }
+
+        private void ResetVisualizer()
+        {
+            if(_visualizer != null)
+            {
+                _visualizer.FrameCaptured -= _visualizer_FrameCaptured;
+                _visualizer.Dispose();
+                _visualizer = null;
+            }
+        }
+
+
+
     }
 }

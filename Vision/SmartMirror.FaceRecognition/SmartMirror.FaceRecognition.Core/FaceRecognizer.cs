@@ -9,6 +9,7 @@ using Emgu.CV.Structure;
 using SmartMirror.FaceRecognition.Core.DataModel;
 using System.IO;
 using System.Xml.Serialization;
+using System.Drawing;
 
 namespace SmartMirror.FaceRecognition.Core
 {
@@ -154,32 +155,30 @@ namespace SmartMirror.FaceRecognition.Core
         }
 
 
-        private Image<Gray, byte> PreProcessImageForRecognition(Image<Bgr, byte> faceImage)
+        private Image<Gray, byte> PreProcessImageForRecognition(Image<Bgr, byte> faceImage, bool withCrop = false)
         {
-            // TODO Add resize and histogram fixes
+            Image<Gray, byte> proccessedImage;
 
+            Rectangle roi = new Rectangle(new Point(0, 0), faceImage.Size);
 
-            // Trick 1: Crop Face
-            /*                   
-            facesDetected[i].X += (int)(facesDetected[i].Height * 0.15);
-            facesDetected[i].Y += (int)(facesDetected[i].Width * 0.22);
-            facesDetected[i].Height -= (int)(facesDetected[i].Height * 0.3);
-            facesDetected[i].Width -= (int)(facesDetected[i].Width * 0.35);
-            */
+            if(withCrop)
+            {
+                roi.X += (int)(roi.Height * 0.15);
+                roi.Y += (int)(roi.Width * 0.22);
+                roi.Height -= (int)(roi.Height * 0.3);
+                roi.Width -= (int)(roi.Width * 0.3);
+            }
 
-            // Trick 2: Resize 100x100
-            /*
-             result = currentFrame.Copy(facesDetected[i]).Convert<Gray, byte>().Resize(100, 100, Emgu.CV.CvEnum.INTER.CV_INTER_CUBIC);
-            */
+            using (var baseFaceImage = faceImage.Copy(roi))
+            {
+                using (var grayFace = baseFaceImage.Convert<Gray, byte>())
+                {
+                    proccessedImage = grayFace.Resize(100, 100, Emgu.CV.CvEnum.Inter.Cubic);
+                    proccessedImage._EqualizeHist();
+                }
+            }
 
-            // Trick 2: Equalize Histogram 100x100
-            /*
-                result._EqualizeHist();
-            */
-
-
-
-            return faceImage.Convert<Gray, byte>();
+            return proccessedImage;
         }
 
         private void SavePersonDB(string folderPath)

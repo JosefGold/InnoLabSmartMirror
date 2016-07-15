@@ -29,87 +29,66 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            this.btnTrain = new System.Windows.Forms.Button();
             this.imageBox1 = new Emgu.CV.UI.ImageBox();
-            this.button2 = new System.Windows.Forms.Button();
-            this.timer1 = new System.Windows.Forms.Timer(this.components);
+            this.btnPOITracker = new System.Windows.Forms.Button();
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
-            this.imgBoxTrain = new Emgu.CV.UI.ImageBox();
+            this.btnFreeDetect = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.imageBox1)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.imgBoxTrain)).BeginInit();
             this.SuspendLayout();
-            // 
-            // btnTrain
-            // 
-            this.btnTrain.Location = new System.Drawing.Point(663, 551);
-            this.btnTrain.Name = "btnTrain";
-            this.btnTrain.Size = new System.Drawing.Size(75, 23);
-            this.btnTrain.TabIndex = 0;
-            this.btnTrain.Text = "Train";
-            this.btnTrain.UseVisualStyleBackColor = true;
-            this.btnTrain.Click += new System.EventHandler(this.button1_Click);
             // 
             // imageBox1
             // 
-            this.imageBox1.Location = new System.Drawing.Point(385, 71);
+            this.imageBox1.Location = new System.Drawing.Point(128, 71);
             this.imageBox1.Name = "imageBox1";
-            this.imageBox1.Size = new System.Drawing.Size(719, 451);
+            this.imageBox1.Size = new System.Drawing.Size(976, 451);
             this.imageBox1.TabIndex = 2;
             this.imageBox1.TabStop = false;
             // 
-            // button2
+            // btnPOITracker
             // 
-            this.button2.Location = new System.Drawing.Point(536, 551);
-            this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(75, 23);
-            this.button2.TabIndex = 3;
-            this.button2.Text = "Snap";
-            this.button2.UseVisualStyleBackColor = true;
-            this.button2.Click += new System.EventHandler(this.button2_Click);
-            // 
-            // timer1
-            // 
-            this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
+            this.btnPOITracker.Location = new System.Drawing.Point(536, 551);
+            this.btnPOITracker.Name = "btnPOITracker";
+            this.btnPOITracker.Size = new System.Drawing.Size(75, 23);
+            this.btnPOITracker.TabIndex = 3;
+            this.btnPOITracker.Text = "POI Tracker";
+            this.btnPOITracker.UseVisualStyleBackColor = true;
+            this.btnPOITracker.Click += new System.EventHandler(this.button2_Click);
             // 
             // openFileDialog1
             // 
             this.openFileDialog1.FileName = "openFileDialog1";
             // 
-            // imgBoxTrain
+            // btnFreeDetect
             // 
-            this.imgBoxTrain.Location = new System.Drawing.Point(48, 119);
-            this.imgBoxTrain.Name = "imgBoxTrain";
-            this.imgBoxTrain.Size = new System.Drawing.Size(227, 225);
-            this.imgBoxTrain.SizeMode = System.Windows.Forms.PictureBoxSizeMode.AutoSize;
-            this.imgBoxTrain.TabIndex = 4;
-            this.imgBoxTrain.TabStop = false;
+            this.btnFreeDetect.Location = new System.Drawing.Point(653, 551);
+            this.btnFreeDetect.Name = "btnFreeDetect";
+            this.btnFreeDetect.Size = new System.Drawing.Size(75, 23);
+            this.btnFreeDetect.TabIndex = 5;
+            this.btnFreeDetect.Text = "Free Detect";
+            this.btnFreeDetect.UseVisualStyleBackColor = true;
+            this.btnFreeDetect.Click += new System.EventHandler(this.btnFreeDetect_Click);
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1148, 603);
-            this.Controls.Add(this.imgBoxTrain);
-            this.Controls.Add(this.button2);
+            this.Controls.Add(this.btnFreeDetect);
+            this.Controls.Add(this.btnPOITracker);
             this.Controls.Add(this.imageBox1);
-            this.Controls.Add(this.btnTrain);
             this.Name = "Form1";
             this.Text = "Form1";
             ((System.ComponentModel.ISupportInitialize)(this.imageBox1)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.imgBoxTrain)).EndInit();
             this.ResumeLayout(false);
-            this.PerformLayout();
 
         }
 
         #endregion
 
-        private System.Windows.Forms.Button btnTrain;
         private Emgu.CV.UI.ImageBox imageBox1;
-        private System.Windows.Forms.Button button2;
-        private System.Windows.Forms.Timer timer1;
+        private System.Windows.Forms.Button btnPOITracker;
         private System.Windows.Forms.OpenFileDialog openFileDialog1;
-        private Emgu.CV.UI.ImageBox imgBoxTrain;
+        private System.Windows.Forms.Button btnFreeDetect;
     }
 }
 

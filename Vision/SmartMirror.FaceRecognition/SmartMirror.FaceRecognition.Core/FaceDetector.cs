@@ -1,6 +1,7 @@
 ﻿using Emgu.CV;
 using Emgu.CV.Structure;
 using SmartMirror.FaceRecognition.Core.DataModel;
+using SmartMirror.FaceRecognition.Core.Utils;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -11,20 +12,24 @@ using System.Windows.Forms;
 
 namespace SmartMirror.FaceRecognition.Core
 {
-    public class FaceDetector
+    //http://ahmedopeyemi.com/main/face-detection-and-recognition-in-c-using-emgucv-3-0-opencv-wrapper-part-1/
+    //http://www.codeproject.com/Articles/239849/Multiple-face-detection-and-recognition-in-real
+    //http://www.codeproject.com/Articles/261550/EMGU-Multiple-Face-Recognition-using-PCA-and-Paral
+
+    public class FaceDetector : IDisposable
     {
-        private Lazy<CascadeClassifier> _faceClassifier;
-        private Lazy<CascadeClassifier> _smileClassifier;
-        private Lazy<CascadeClassifier> _noseClassifier;
-        private Lazy<CascadeClassifier> _eyesClassifier;
+        private LazyDisposable<CascadeClassifier> _faceClassifier;
+        private LazyDisposable<CascadeClassifier> _mouthClassifier;
+        private LazyDisposable<CascadeClassifier> _noseClassifier;
+        private LazyDisposable<CascadeClassifier> _eyesClassifier;
 
 
         public FaceDetector()
         {
-            _faceClassifier = new Lazy<CascadeClassifier>(() => BuildCascadeClassifierFromFile("haarcascade_frontalface_default.xml"));
-            _noseClassifier = new Lazy<CascadeClassifier>(() => BuildCascadeClassifierFromFile("haarcascade_mcs_nose.xml"));
-            _eyesClassifier = new Lazy<CascadeClassifier>(() => BuildCascadeClassifierFromFile("haarcascade_eye.xml"));
-            _smileClassifier = new Lazy<CascadeClassifier>(() => BuildCascadeClassifierFromFile("haarcascade_smile.xml"));
+            _faceClassifier = new LazyDisposable<CascadeClassifier>(() => BuildCascadeClassifierFromFile("haarcascade_frontalface_default.xml"));
+            _noseClassifier = new LazyDisposable<CascadeClassifier>(() => BuildCascadeClassifierFromFile("haarcascade_mcs_nose.xml"));
+            _eyesClassifier = new LazyDisposable<CascadeClassifier>(() => BuildCascadeClassifierFromFile("haarcascade_eye.xml"));
+            _mouthClassifier = new LazyDisposable<CascadeClassifier>(() => BuildCascadeClassifierFromFile("haarcascade_smile.xml"));
         }
 
 
@@ -85,7 +90,7 @@ namespace SmartMirror.FaceRecognition.Core
                     var eyes = _eyesClassifier.Value.DetectMultiScale(grayFace, 1.1, 3, Size.Empty, new Size(face.Width / 3, face.Height / 3));
 
                     // Detect Mouths
-                    var mouths = _smileClassifier.Value.DetectMultiScale(grayFace, 1.1, 3, Size.Empty, new Size(face.Width, face.Height / 2));
+                    var mouths = _mouthClassifier.Value.DetectMultiScale(grayFace, 1.1, 3, Size.Empty, new Size(face.Width, face.Height / 2));
 
                     var eyesFilteres = eyes.Where(e => e.Y < nose.Y).OrderBy(e => e.Y);
                     var mouthsFilteres = mouths.Where(e => e.Y > (nose.Y + (nose.Height / 2)));
@@ -123,5 +128,28 @@ namespace SmartMirror.FaceRecognition.Core
             return new CascadeClassifier(Application.StartupPath + @"\Data\haarcascades\" + haarCascadeXmlFile);
         }
 
+
+        public void Dispose()
+        {
+            if(_faceClassifier != null )
+            {
+                _faceClassifier.Dispose();
+            }
+
+            if (_eyesClassifier != null)
+            {
+                _eyesClassifier.Dispose();
+            }
+
+            if (_noseClassifier != null)
+            {
+                _noseClassifier.Dispose();
+            }
+
+            if (_mouthClassifier != null)
+            {
+                _mouthClassifier.Dispose();
+            }
+        }
     }
 }

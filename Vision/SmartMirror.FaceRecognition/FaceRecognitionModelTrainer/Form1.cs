@@ -60,6 +60,7 @@ namespace FaceRecognitionModelTrainer
             }
         }
 
+
         private void btnAddPerson_Click(object sender, EventArgs e)
         {
             if (string.IsNullOrEmpty(txtNewPersonName.Text))
@@ -112,6 +113,68 @@ namespace FaceRecognitionModelTrainer
                         Name = chkIsUnkownClass.Checked ? "UNKOWN" : txtNewPersonName.Text
                     },
                     FacialImages = faceImages
+                };
+
+                AddNewPersonTrainData(trainData);
+
+                ClearPersonAddingArae();
+            }
+
+        }
+
+
+        private void btnCaptureFromCam_Click(object sender, EventArgs e)
+        {
+            if (string.IsNullOrEmpty(txtNewPersonName.Text))
+            {
+                MessageBox.Show("Missing Person Name");
+                return;
+            }
+
+            List<Image<Bgr, byte>> trainCaptureFormImages = new List<Image<Bgr, byte>>();
+
+            using (TrainCapture capture = new TrainCapture())
+            {
+                capture.ShowDialog(this);
+
+                trainCaptureFormImages = capture.FaceImages;
+            }
+
+            if (trainCaptureFormImages.Count == 0)
+            {
+                MessageBox.Show("No Face pictures were captured, try again");
+                return;
+            }
+            else
+            {
+                if (trainCaptureFormImages.Count < 5)
+                {
+                    MessageBox.Show("Warning: Less than 5 face images captured");
+                }
+
+
+                int classId;
+
+                if (chkIsUnkownClass.Checked)
+                {
+                    nUnkownClassCounter--;
+                    classId = nUnkownClassCounter;
+                }
+                else
+                {
+                    nClassCounter++;
+                    classId = nClassCounter;
+                }
+
+
+                FaceRecognitionPersonTrainData trainData = new FaceRecognitionPersonTrainData()
+                {
+                    PersonInfo = new PersonInfo()
+                    {
+                        Id = classId,
+                        Name = chkIsUnkownClass.Checked ? "UNKOWN" : txtNewPersonName.Text
+                    },
+                    FacialImages = trainCaptureFormImages
                 };
 
                 AddNewPersonTrainData(trainData);
@@ -210,6 +273,7 @@ namespace FaceRecognitionModelTrainer
 
             treeViewTrainData.Nodes.Add(node);
         }
+
 
     }
 }
