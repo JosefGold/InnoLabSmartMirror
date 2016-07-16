@@ -102,7 +102,7 @@ namespace FaceRecognitionGUITester
                 var result = _recognizer.ResolveMostDistinctFaceInImage(frame.ToImage<Bgr, byte>());
                 if (result != null)
                 {
-                    MessageBox.Show(result.RecognizedPerson.Name);
+                    MessageBox.Show(result.RecognizedPerson.Name + " - " + result.ConfidenceLevel + "%");
                 }
                 else
                 {

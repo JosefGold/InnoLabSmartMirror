@@ -82,6 +82,7 @@ namespace SmartMirror.FaceRecognition.Core
                 if (OnSceneUpdated != null && (sceneUpdated || !_updateOnDetectionOnly))
                 {
                     bool faceFound = _state.FoundFace != null;
+                    bool faceRecognized = _state.FaceRecognitionResult != null;
 
                     OnSceneUpdated(new SceneInfo()
                         {
@@ -89,6 +90,8 @@ namespace SmartMirror.FaceRecognition.Core
                             HasFace = faceFound,
                             PersonOfInterest = faceFound ? _state.FoundFace.Clone() : null,
                             PersonId = faceFound ? _state.FaceId : Guid.Empty,
+                            IsFaceRecognized = faceRecognized,
+                            PersonOfInterestIdentity = faceRecognized ? _state.FaceRecognitionResult.Clone() : null,
                             SceneTime = frameTime
                         });
                 }
@@ -181,6 +184,7 @@ namespace SmartMirror.FaceRecognition.Core
         {
             public DateTime StateUpdateTime { get; set; }
             public FaceDetectionResult FoundFace { get; set; }
+            public FaceRecognitionResult FaceRecognitionResult { get; set; }
             public Guid FaceId { get; set; }
             public DateTime FaceFirstSeen { get; set; }
             public DateTime FaceLastSeen { get; set; }

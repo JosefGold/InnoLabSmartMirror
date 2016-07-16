@@ -14,5 +14,14 @@ namespace SmartMirror.FaceRecognition.Core.DataModel
         public int Id { get; set; }
         [DataMember]
         public string Name { get; set; }
+
+        internal PersonInfo Clone()
+        {
+            return new PersonInfo()
+            {
+                Id = Id,
+                Name = Name
+            };
+        }
     }
 }

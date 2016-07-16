@@ -11,5 +11,14 @@ namespace SmartMirror.FaceRecognition.Core.DataModel
         public PersonInfo RecognizedPerson { get; set; }
         public double ConfidenceLevel { get; set; }
 
+
+        internal FaceRecognitionResult Clone()
+        {
+            return new FaceRecognitionResult()
+            {
+                ConfidenceLevel = ConfidenceLevel,
+                RecognizedPerson = RecognizedPerson.Clone()
+            };
+        }
     }
 }
