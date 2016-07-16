@@ -19,7 +19,12 @@ namespace SmartMirror.FaceRecognition.Core
     {
         public const double EigenFaceRecognizerThreshold = 2000;
         public const double FisherFaceRecognizerThreshold = 3500; //4000
-        public const double LBPHFaceRecognizerThreshold = 100; //50
+        public const double LBPHFaceRecognizerThreshold = 100;
+
+        public const double EigenFaceRecognizerDecisionWeight = 0.2;
+        public const double FisherFaceRecognizerDecisionWeight = 0.2;
+        public const double LBPHFaceRecognizerDecisionWeight = 0.6;
+
 
         private object _syncRoot = new object();
         private bool _isTrained = false;
@@ -27,6 +32,7 @@ namespace SmartMirror.FaceRecognition.Core
         private Emgu.CV.Face.FaceRecognizer _eigenFaceRecognizer;
         private Emgu.CV.Face.FaceRecognizer _fisherFaceRecognizer;
         private Emgu.CV.Face.FaceRecognizer _lbphFaceRecognizer;
+
 
         private Dictionary<int, PersonInfo> _personDB;
 
@@ -128,11 +134,44 @@ namespace SmartMirror.FaceRecognition.Core
 
             FaceRecognitionResult result;
 
-            var eigenResult = RecognizeWithEigenFace(proccessedFaceImage);
-            var fisherResult = RecognizeWithFisherFace(proccessedFaceImage);
-            var lbphResult = RecognizeWithLBPH(proccessedFaceImage);
+            var eigenTask = Task.Run(() => { return RecognizeWithEigenFace(proccessedFaceImage.Copy()); });
+            var fisherTask = Task.Run(() => { return RecognizeWithFisherFace(proccessedFaceImage.Copy()); });
+            var lbphTask = Task.Run(() => { return RecognizeWithLBPH(proccessedFaceImage.Copy()); });
 
-            return lbphResult;
+            Task.WaitAll(eigenTask, fisherTask, lbphTask);
+
+            var eigenResult = eigenTask.Result;
+            var fisherResult = fisherTask.Result;
+            var lbphResult = lbphTask.Result;
+
+            // Apply weights
+            eigenResult.ConfidenceLevel = eigenResult.ConfidenceLevel * EigenFaceRecognizerDecisionWeight;
+            fisherResult.ConfidenceLevel = fisherResult.ConfidenceLevel * FisherFaceRecognizerDecisionWeight;
+            lbphResult.ConfidenceLevel = lbphResult.ConfidenceLevel * LBPHFaceRecognizerDecisionWeight;
+
+            List<FaceRecognitionResult> allResults = new List<FaceRecognitionResult>() { eigenResult, fisherResult, lbphResult };
+
+            // Group by Name in case this person has multiple classes or it's Unkown
+            var summedResults = allResults.GroupBy(r => r.RecognizedPerson.Name).Select(g => new FaceRecognitionResult()
+                                                                                                 {
+                                                                                                     ConfidenceLevel = Math.Min(g.Sum(r => r.ConfidenceLevel) * (1 + Math.Log10(g.Count())), 100),
+                                                                                                     RecognizedPerson = g.Select(r => r.RecognizedPerson).First()
+                                                                                                 });
+
+            var bestResult = summedResults.OrderByDescending(r => r.ConfidenceLevel).First();
+
+        /*    return new FaceRecognitionResult()
+                {
+                    RecognizedPerson = new PersonInfo()
+                    {
+                        Name = string.Format("Eigen - {0}-{1}%\nFisher - {2}-{3}%\nLBPH - {4}-{5}%\nDecision - {6}-{7}%", eigenResult.RecognizedPerson.Name, eigenResult.ConfidenceLevel,
+                                                                                                 fisherResult.RecognizedPerson.Name, fisherResult.ConfidenceLevel,
+                                                                                                  lbphResult.RecognizedPerson.Name, lbphResult.ConfidenceLevel,
+                                                                                                  bestResult.RecognizedPerson.Name, bestResult.ConfidenceLevel)
+                    }
+                };*/
+
+            return bestResult;
         }
 
         private FaceRecognitionResult RecognizeWithEigenFace(Image<Gray, Byte> faceImage)
@@ -145,7 +184,7 @@ namespace SmartMirror.FaceRecognition.Core
                 result = new FaceRecognitionResult()
                 {
                     RecognizedPerson = _personDB[recognitionResults.Label],
-                    ConfidenceLevel = ((recognitionResults.Distance - EigenFaceRecognizerThreshold) / (EigenFaceRecognizerThreshold * 3)) * 100
+                    ConfidenceLevel = GetEigenFaceConfidence(recognitionResults.Distance)
                 };
             }
             else
@@ -153,7 +192,7 @@ namespace SmartMirror.FaceRecognition.Core
                 result = new FaceRecognitionResult()
                 {
                     RecognizedPerson = DEFAULT_UNKOWN,
-                    ConfidenceLevel = 100
+                    ConfidenceLevel = GetEigenFaceNegativeConfidence(recognitionResults.Distance)
                 };
             }
             return result;
@@ -170,7 +209,7 @@ namespace SmartMirror.FaceRecognition.Core
                 result = new FaceRecognitionResult()
                 {
                     RecognizedPerson = _personDB[recognitionResults.Label],
-                    ConfidenceLevel = ((FisherFaceRecognizerThreshold - recognitionResults.Distance) / FisherFaceRecognizerThreshold) * 100
+                    ConfidenceLevel = GetFisherFaceConfidence(recognitionResults.Distance)
                 };
             }
             else
@@ -178,7 +217,7 @@ namespace SmartMirror.FaceRecognition.Core
                 result = new FaceRecognitionResult()
                 {
                     RecognizedPerson = DEFAULT_UNKOWN,
-                    ConfidenceLevel = 100
+                    ConfidenceLevel = GetFisherNegativeConfidence(recognitionResults.Distance)
                 };
             }
             return result;
@@ -195,7 +234,7 @@ namespace SmartMirror.FaceRecognition.Core
                 result = new FaceRecognitionResult()
                 {
                     RecognizedPerson = _personDB[recognitionResults.Label],
-                    ConfidenceLevel = ((LBPHFaceRecognizerThreshold - recognitionResults.Distance) / LBPHFaceRecognizerThreshold) * 100
+                    ConfidenceLevel = GetLBPHConfidence(recognitionResults.Distance)
                 };
             }
             else
@@ -203,10 +242,62 @@ namespace SmartMirror.FaceRecognition.Core
                 result = new FaceRecognitionResult()
                 {
                     RecognizedPerson = DEFAULT_UNKOWN,
-                    ConfidenceLevel = 100
+                    ConfidenceLevel = GetLBPHNegativeConfidence(recognitionResults.Distance)
                 };
             }
             return result;
+        }
+
+        private static double GetEigenFaceConfidence(double distance)
+        {
+            double relativeDistance = ((distance - EigenFaceRecognizerThreshold) / (EigenFaceRecognizerThreshold * 3));
+            double confidence = Math.Pow(relativeDistance, 2) + (relativeDistance / 2);
+
+            return Math.Min(confidence * 100, 100);
+        }
+
+        private static double GetEigenFaceNegativeConfidence(double distance)
+        {
+            double relativeDistance = ((distance - EigenFaceRecognizerThreshold) / EigenFaceRecognizerThreshold);
+            double confidence = Math.Pow(relativeDistance, 2) - (relativeDistance / 2);
+
+            return Math.Min(confidence * 100, 100);
+        }
+
+        private static double GetFisherFaceConfidence(double distance)
+        {
+            double relativeDistance = ((FisherFaceRecognizerThreshold - distance) / FisherFaceRecognizerThreshold);
+            double confidence = Math.Pow(relativeDistance, 4) + (relativeDistance / 3);
+
+            return Math.Min(confidence * 100, 100);
+        }
+
+        private static double GetFisherNegativeConfidence(double distance)
+        {
+            double relativeDistance = ((FisherFaceRecognizerThreshold * 2 - distance) / FisherFaceRecognizerThreshold * 2);
+            double confidence = Math.Pow(relativeDistance, 4) - (relativeDistance / 3);
+
+            return Math.Min(confidence * 100, 100);
+        }
+
+
+
+        private static double GetLBPHConfidence(double distance)
+        {
+            double relativeDistance = ((LBPHFaceRecognizerThreshold - distance) / LBPHFaceRecognizerThreshold);
+            double confidence = Math.Pow(relativeDistance, 0.5) + (relativeDistance / 3);
+
+            return Math.Min(confidence * 100, 100);
+        }
+
+        private static double GetLBPHNegativeConfidence(double distance)
+        {
+            /*double relativeDistance = ((LBPHFaceRecognizerThreshold * 2 - distance) / LBPHFaceRecognizerThreshold * 2);
+            double confidence = Math.Pow(relativeDistance, 0.5) - (relativeDistance / 3);
+
+            return Math.Min(confidence * 100, 100);*/
+
+            return 50;
         }
 
 
