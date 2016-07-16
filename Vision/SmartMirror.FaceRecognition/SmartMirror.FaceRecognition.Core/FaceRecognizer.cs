@@ -129,49 +129,49 @@ namespace SmartMirror.FaceRecognition.Core
             }
 
 
-            Image<Gray, Byte> proccessedFaceImage = PreProcessImageForRecognition(faceImage);
+            using (Image<Gray, Byte> proccessedFaceImage = PreProcessImageForRecognition(faceImage))
+            {
+                FaceRecognitionResult result;
 
+                var eigenTask = Task.Run(() => { return RecognizeWithEigenFace(proccessedFaceImage.Copy()); });
+                var fisherTask = Task.Run(() => { return RecognizeWithFisherFace(proccessedFaceImage.Copy()); });
+                var lbphTask = Task.Run(() => { return RecognizeWithLBPH(proccessedFaceImage.Copy()); });
 
-            FaceRecognitionResult result;
+                Task.WaitAll(eigenTask, fisherTask, lbphTask);
 
-            var eigenTask = Task.Run(() => { return RecognizeWithEigenFace(proccessedFaceImage.Copy()); });
-            var fisherTask = Task.Run(() => { return RecognizeWithFisherFace(proccessedFaceImage.Copy()); });
-            var lbphTask = Task.Run(() => { return RecognizeWithLBPH(proccessedFaceImage.Copy()); });
+                var eigenResult = eigenTask.Result;
+                var fisherResult = fisherTask.Result;
+                var lbphResult = lbphTask.Result;
 
-            Task.WaitAll(eigenTask, fisherTask, lbphTask);
+                // Apply weights
+                eigenResult.ConfidenceLevel = eigenResult.ConfidenceLevel * EigenFaceRecognizerDecisionWeight;
+                fisherResult.ConfidenceLevel = fisherResult.ConfidenceLevel * FisherFaceRecognizerDecisionWeight;
+                lbphResult.ConfidenceLevel = lbphResult.ConfidenceLevel * LBPHFaceRecognizerDecisionWeight;
 
-            var eigenResult = eigenTask.Result;
-            var fisherResult = fisherTask.Result;
-            var lbphResult = lbphTask.Result;
+                List<FaceRecognitionResult> allResults = new List<FaceRecognitionResult>() { eigenResult, fisherResult, lbphResult };
 
-            // Apply weights
-            eigenResult.ConfidenceLevel = eigenResult.ConfidenceLevel * EigenFaceRecognizerDecisionWeight;
-            fisherResult.ConfidenceLevel = fisherResult.ConfidenceLevel * FisherFaceRecognizerDecisionWeight;
-            lbphResult.ConfidenceLevel = lbphResult.ConfidenceLevel * LBPHFaceRecognizerDecisionWeight;
+                // Group by Name in case this person has multiple classes or it's Unkown
+                var summedResults = allResults.GroupBy(r => r.RecognizedPerson.Name).Select(g => new FaceRecognitionResult()
+                                                                                                     {
+                                                                                                         ConfidenceLevel = Math.Min(g.Sum(r => r.ConfidenceLevel) * (1 + Math.Log10(g.Count())), 100),
+                                                                                                         RecognizedPerson = g.Select(r => r.RecognizedPerson).First()
+                                                                                                     });
 
-            List<FaceRecognitionResult> allResults = new List<FaceRecognitionResult>() { eigenResult, fisherResult, lbphResult };
+                var bestResult = summedResults.OrderByDescending(r => r.ConfidenceLevel).First();
 
-            // Group by Name in case this person has multiple classes or it's Unkown
-            var summedResults = allResults.GroupBy(r => r.RecognizedPerson.Name).Select(g => new FaceRecognitionResult()
-                                                                                                 {
-                                                                                                     ConfidenceLevel = Math.Min(g.Sum(r => r.ConfidenceLevel) * (1 + Math.Log10(g.Count())), 100),
-                                                                                                     RecognizedPerson = g.Select(r => r.RecognizedPerson).First()
-                                                                                                 });
+                /*    return new FaceRecognitionResult()
+                        {
+                            RecognizedPerson = new PersonInfo()
+                            {
+                                Name = string.Format("Eigen - {0}-{1}%\nFisher - {2}-{3}%\nLBPH - {4}-{5}%\nDecision - {6}-{7}%", eigenResult.RecognizedPerson.Name, eigenResult.ConfidenceLevel,
+                                                                                                         fisherResult.RecognizedPerson.Name, fisherResult.ConfidenceLevel,
+                                                                                                          lbphResult.RecognizedPerson.Name, lbphResult.ConfidenceLevel,
+                                                                                                          bestResult.RecognizedPerson.Name, bestResult.ConfidenceLevel)
+                            }
+                        };*/
 
-            var bestResult = summedResults.OrderByDescending(r => r.ConfidenceLevel).First();
-
-        /*    return new FaceRecognitionResult()
-                {
-                    RecognizedPerson = new PersonInfo()
-                    {
-                        Name = string.Format("Eigen - {0}-{1}%\nFisher - {2}-{3}%\nLBPH - {4}-{5}%\nDecision - {6}-{7}%", eigenResult.RecognizedPerson.Name, eigenResult.ConfidenceLevel,
-                                                                                                 fisherResult.RecognizedPerson.Name, fisherResult.ConfidenceLevel,
-                                                                                                  lbphResult.RecognizedPerson.Name, lbphResult.ConfidenceLevel,
-                                                                                                  bestResult.RecognizedPerson.Name, bestResult.ConfidenceLevel)
-                    }
-                };*/
-
-            return bestResult;
+                return bestResult;
+            }
         }
 
         private FaceRecognitionResult RecognizeWithEigenFace(Image<Gray, Byte> faceImage)
