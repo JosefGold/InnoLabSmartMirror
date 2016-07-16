@@ -15,27 +15,42 @@ namespace SmartMirror.FaceRecognition.Core
     public class PersonOfInterestTracker : IDisposable
     {
         bool _updateOnDetectionOnly;
+        bool _doFecialRecognition;
 
         CameraFeed _camFeed;
         FaceDetector _faceDetector;
+        FaceRecognizer _faceRecognizer;
 
         Object _stateSyncObj = new object(); // This shouldn't be neccesery, but just in case 
         SceneTrackingState _state;
 
         public event SceneUpdated OnSceneUpdated;
 
-        public PersonOfInterestTracker(bool detectFaceFeatures = false, bool doFecialRecognition = false, int fps = 10, bool updateOnDetectionOnly = true)
+        public PersonOfInterestTracker(int fps = 10, bool updateOnDetectionOnly = true, bool detectFaceFeatures = false, bool doFecialRecognition = false, string faceRecognizerModelDir = null)
         {
             _camFeed = new CameraFeed(fps);
             _camFeed.FrameCaptured += _camFeed_FrameCaptured;
             _faceDetector = new FaceDetector();
             _updateOnDetectionOnly = updateOnDetectionOnly;
 
+            if(doFecialRecognition)
+            {
+                if (string.IsNullOrEmpty(faceRecognizerModelDir))
+                {
+                    throw new ArgumentNullException("faceRecognizerModelDir", "Must provide face recognizer model directory if wishing to do face recognition");
+                }
+
+                _doFecialRecognition = doFecialRecognition;
+                _faceRecognizer = new FaceRecognizer(faceRecognizerModelDir);
+            }
+
             _state = new SceneTrackingState()
             {
                 StateUpdateTime = DateTime.MinValue,
                 FaceLastSeen = DateTime.MinValue,
                 FaceFirstSeen = DateTime.MinValue,
+                FaceFirstRecognized = DateTime.MinValue,
+                FaceLastRecognized = DateTime.MinValue,
                 FaceId = Guid.Empty
             };
         }
@@ -110,6 +125,9 @@ namespace SmartMirror.FaceRecognition.Core
 
                 _state.FaceFirstSeen = DateTime.MinValue;
                 _state.FaceLastSeen = DateTime.MinValue;
+                _state.FaceFirstRecognized = DateTime.MinValue;
+                _state.FaceLastRecognized = DateTime.MinValue;
+                _state.FaceRecognitionResult = null;
                 _state.FaceId = Guid.Empty;
 
                 return true;
@@ -130,6 +148,15 @@ namespace SmartMirror.FaceRecognition.Core
                 _state.FaceLastSeen = frameTime;
                 _state.FaceId = Guid.NewGuid();
 
+                FaceRecognitionResult result = RecognizeFace(foundFace);
+
+                if(result != null && result.RecognizedPerson.Id > 0)
+                {
+                    _state.FaceFirstRecognized = frameTime;
+                    _state.FaceLastRecognized = frameTime;
+                    _state.FaceRecognitionResult = result;
+                }
+
                 return true;
             }
             // Same Old face
@@ -138,6 +165,41 @@ namespace SmartMirror.FaceRecognition.Core
                 var oldFace = _state.FoundFace;
                 _state.FoundFace = foundFace;
                 oldFace.Dispose();
+
+                if(_state.FaceRecognitionResult == null &&
+                    (frameTime - _state.FaceLastSeen).TotalSeconds > 0) // Second rule makes sure we only attempt to recognize once every second
+                {
+                    FaceRecognitionResult result = RecognizeFace(foundFace);
+
+                    if (result != null && result.RecognizedPerson.Id > 0)
+                    {
+                        _state.FaceFirstRecognized = frameTime;
+                        _state.FaceLastRecognized = frameTime;
+                        _state.FaceRecognitionResult = result;
+                    }
+                }
+                else  if (_state.FaceRecognitionResult != null &&
+                    (frameTime - _state.FaceLastRecognized).TotalSeconds > 3)
+                {
+                    // TODO: Handle recognision changing
+                    FaceRecognitionResult result = RecognizeFace(foundFace);
+
+                    // Slowly raise confidence level 
+                    if (result.ConfidenceLevel > _state.FaceRecognitionResult.ConfidenceLevel)
+                    {
+                        result.ConfidenceLevel = (result.ConfidenceLevel + _state.FaceRecognitionResult.ConfidenceLevel) / 2; // AverageOut confidance
+                    }
+                    else
+                    {
+                        result.ConfidenceLevel = _state.FaceRecognitionResult.ConfidenceLevel;
+                    }
+
+                    if (result != null && result.RecognizedPerson.Id > 0)
+                    {
+                        _state.FaceLastRecognized = frameTime;
+                        _state.FaceRecognitionResult = result;
+                    }
+                }
 
                 _state.FaceLastSeen = frameTime;
 
@@ -150,6 +212,11 @@ namespace SmartMirror.FaceRecognition.Core
 
                 return false;
             }
+        }
+
+        private FaceRecognitionResult RecognizeFace(FaceDetectionResult foundFace)
+        {
+           return _faceRecognizer.ResolveFaceImage(foundFace.FaceImage);
         }
 
         private bool EstimateSameFaceAsState(FaceDetectionResult foundFace, DateTime frameTime)
@@ -188,6 +255,9 @@ namespace SmartMirror.FaceRecognition.Core
             public Guid FaceId { get; set; }
             public DateTime FaceFirstSeen { get; set; }
             public DateTime FaceLastSeen { get; set; }
+
+            public DateTime FaceFirstRecognized { get; set; }
+            public DateTime FaceLastRecognized { get; set; }
         }
 
 

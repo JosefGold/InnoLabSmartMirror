@@ -11,16 +11,22 @@ using System.Threading.Tasks;
 namespace SmartMirror.FaceRecognition.Core.Visualization
 {
 
-
     public class POITrackerVisualizer : IFeedVisualizer
     {
         PersonOfInterestTracker _tracker;
 
         public event FrameCapturedEventHandler FrameCaptured;
 
-        public POITrackerVisualizer()
+        public POITrackerVisualizer(string faceRecognizerModelDir = null)
         {
-            _tracker = new PersonOfInterestTracker(fps: 20, updateOnDetectionOnly: false);
+            if (string.IsNullOrEmpty(faceRecognizerModelDir))
+            {
+                _tracker = new PersonOfInterestTracker(fps: 20, updateOnDetectionOnly: false);
+            }
+            else
+            {
+                _tracker = new PersonOfInterestTracker(fps: 20, updateOnDetectionOnly: false, doFecialRecognition: true, faceRecognizerModelDir: faceRecognizerModelDir);
+            }
         }
 
         public void Start()
@@ -42,7 +48,9 @@ namespace SmartMirror.FaceRecognition.Core.Visualization
 
             if (sceneInfo.HasFace)
             {
-                frame = VisualizationTools.DrawFacesAsOverlay(sceneInfo.SceneFrame, new Dictionary<string, FaceDetectionResult>() { { sceneInfo.PersonId.ToString().Split('-')[0], sceneInfo.PersonOfInterest } }, true);
+                frame = VisualizationTools.DrawFacesAsOverlay(sceneInfo.SceneFrame, new Dictionary<string, FaceDetectionResult>() { { sceneInfo.IsFaceRecognized ? 
+                                                                                                                                        sceneInfo.PersonOfInterestIdentity.RecognizedPerson.Name + " - " + (int)sceneInfo.PersonOfInterestIdentity.ConfidenceLevel + "%"
+                                                                                                                                        : sceneInfo.PersonId.ToString().Split('-')[0], sceneInfo.PersonOfInterest } }, true);
             }
             else
             {

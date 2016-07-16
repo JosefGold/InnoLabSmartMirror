@@ -42,7 +42,7 @@ namespace FaceRecognitionGUITester
         {
             ResetVisualizer();
 
-            _visualizer = new POITrackerVisualizer();
+            _visualizer = new POITrackerVisualizer("..\\..\\..\\TrainingSets\\YossiPennyAndRandoms");
             _visualizer.FrameCaptured += _visualizer_FrameCaptured;
             _visualizer.Start();
         }
